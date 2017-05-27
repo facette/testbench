@@ -1,0 +1,60 @@
+---
+version: '2'
+
+# Note: the collectd image must be built first, since the rrdtool image relies on it
+
+services:
+  graphite:
+    container_name: facette_graphite
+    image: facette/graphite
+    build:
+      context: ./graphite
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    ports:
+    - 127.0.0.1:8000:8000
+
+  influxdb:
+    container_name: facette_influxdb
+    image: facette/influxdb
+    build:
+      context: ./influxdb
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    ports:
+    - 127.0.0.1:8083:8083
+    - 127.0.0.1:8086:8086
+
+  kairosdb:
+    container_name: facette_kairosdb
+    image: facette/kairosdb
+    build:
+      context: ./kairosdb
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    ports:
+    - 127.0.0.1:8080:8080
+
+  rrdtool:
+    container_name: facette_rrdtool
+    image: facette/rrdtool
+    build:
+      context: ./rrdtool
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /tmp/collectd:/var/lib/collectd
+
+  collectd:
+    container_name: facette_collectd
+    image: facette/collectd
+    build:
+      context: ./collectd
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    links:
+    - graphite:graphite-server
+    - influxdb:influxdb-server
+    - kairosdb:kairosdb-server
+    - rrdtool:collectd-server
+
+# vim: ts=2 sw=2 et
