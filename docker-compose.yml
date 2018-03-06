@@ -35,6 +35,26 @@ services:
     ports:
     - 127.0.0.1:8080:8080
 
+  prometheus-collectd-exporter:
+    container_name: facette_prometheus-collectd-exporter
+    image: facette/prometheus-collectd-exporter
+    build:
+      context: ./prometheus-collectd-exporter
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+
+  prometheus:
+    container_name: facette_prometheus
+    image: facette/prometheus
+    build:
+      context: ./prometheus
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    links:
+    - prometheus-collectd-exporter
+    ports:
+    - 127.0.0.1:9090:9090
+
   rrdtool:
     container_name: facette_rrdtool
     image: facette/rrdtool
@@ -55,6 +75,7 @@ services:
     - graphite:graphite-server
     - influxdb:influxdb-server
     - kairosdb:kairosdb-server
+    - prometheus-collectd-exporter:prometheus-server
     - rrdtool:collectd-server
 
 # vim: ts=2 sw=2 et
