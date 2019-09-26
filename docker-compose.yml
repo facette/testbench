@@ -1,0 +1,63 @@
+---
+version: "3"
+services:
+  collectd:
+    build:
+      context: ./collectd
+    container_name: facette_testbench_collectd
+    depends_on:
+    - kairosdb
+    image: facette/testbench-collectd
+    links:
+    - kairosdb
+    - rrdtool
+    ports:
+    - 9103:9103
+    volumes:
+    - /tmp/collectd:/var/lib/collectd
+    restart: always
+
+  kairosdb:
+    build:
+      args:
+        KAIROSDB_VERSION: 1.2.2
+        KAIROS_CARBON_VERSION: 1.3
+      context: ./kairosdb
+    container_name: facette_testbench_kairosdb
+    depends_on:
+    - scylla
+    image: facette/testbench-kairosdb
+    links:
+    - scylla
+    ports:
+    - 8080:8080
+    restart: always
+
+  prometheus:
+    build:
+      context: ./prometheus
+    container_name: facette_testbench_prometheus
+    depends_on:
+    - collectd
+    image: facette/testbench-prometheus
+    links:
+    - collectd
+    ports:
+    - 9090:9090
+    restart: always
+
+  rrdtool:
+    build:
+      context: ./rrdtool
+    container_name: facette_testbench_rrdtool
+    image: facette/testbench-rrdtool
+    restart: always
+    volumes:
+    - /tmp/facette-testbench/collectd:/var/lib/collectd
+
+  scylla:
+    container_name: facette_testbench_scylla
+    image: scylladb/scylla
+    restart: always
+
+# vim: ts=2 sw=2 et
